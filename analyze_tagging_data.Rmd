@@ -33,9 +33,11 @@ data_file <- 'tagged_variables.txt'
 
 # Overview of the data
 Input data file: ``r data_file``
+
 The input data was exported from the PIE production database using a `python` script. Some minimal pre-processing of the data (mostly removing non-ASCII characters from the user-input comment fields) was performed in that `python` script.
 
-I read in the data using the `tidyverse` `readr` function. After examining the data, I set the data type for each column, including setting several categorical variables up to be factors with automatically deteckt factor levels.
+I read in the data using the `tidyverse` `readr` function. After examining the data, I set the data type for each column, including setting up many of the categorical variables to be factors with automatically detected factor levels.
+
 ```{r read-data, results='hide'}
 tagged_variable_col_types <- cols(
   tag_id = col_factor(NULL),
@@ -64,8 +66,8 @@ all_tagged_variables <- read_tsv(data_file, na=c('', 'None'), col_types=tagged_v
 problems(all_tagged_variables)  # No problems!
 ```
 
-Then I customized the factor levels for the `milestone`, `dcc_review_status`, and `study_response_status` columns. I confirmed the factor levels had been changed accurately by comparing bar plots of each variable before and after the level changes. The plots are hidden now.
-```{r set-factor-levels, fig.show='hide', results='hold'}
+Then I customized the factor levels for the `milestone`, `dcc_review_status`, and `study_response_status` columns. I confirmed the factor levels had been changed accurately by comparing bar plots of each variable before and after the level changes.
+```{r set-factor-levels, results='hold'}
 # Order the milestone levels properly.
 ggplot(all_tagged_variables) + geom_bar(aes(x=milestone))
 all_tagged_variables <- all_tagged_variables %>% 
@@ -85,16 +87,17 @@ all_tagged_variables <- all_tagged_variables %>%
 ggplot(all_tagged_variables) + geom_bar(aes(x=study_response_status))
 ```
 
-Last time I said:
-> Finally, I subset the data to only include the seven cohort studies that received subcontract funding to complete tagging. The other studies, which were tagged by DCC staff members, have far fewer variables to tag and weren't easy to visualize on the same scale as the seven large cohort studies. 
+While I've previously included only the studies that were funded for tagging through subcontracts, for my current analysis I'd like to take a look at all of the studies. So the evaluation of this code block is turned off.
 
-But now I want all of the studies included, so I'm not doing this subsetting. I still added some study abbreviations for concise display.
-```{r subset-studies}
-# # Save a subset of the data with just the funded studies.
-# tagged_variables <- all_tagged_variables %>%
-#     subset(study_phs %in% funded_studies) %>% 
-#     droplevels()
+```{r subset-studies, eval=FALSE}
+# Save a subset of the data with just the funded studies.
+tagged_variables <- all_tagged_variables %>%
+   subset(study_phs %in% funded_studies) %>% 
+   droplevels()
+```
 
+I added some study abbreviations for concise display.
+```{r set-study-abbreviations}
 study_shortnames <- c('MESA' = 209, 'JHS' = 286, 'ARIC' = 280, 'CHS' = 287, 'WHI' = 200, 'FHS' = 7, 'CARDIA' = 285,
                       'COPDGene' = 179, 'CFS' = 284, 'Mayo_VTE' = 289, 'GOLDN' = 741, 'HCHS/SOL' = 810,
                       'SAS' = 914, 'Amish' = 956, 'CRA' = 988, 'HVH' = 1013, 'GENOA' = 1238)
@@ -365,6 +368,7 @@ tagged_variable_counts_by_milestone_and_study_ggp <-
     geom_bar(aes(x=study_shortname, y=tagged_variable_count, fill=milestone), stat='identity', position='stack', color=bar_border_color) +
     milestone_fill +
     current_theme +
+    angled_x_axis_labels +
     legend_on_top
 ```
 
