@@ -1,0 +1,18 @@
+study_name	n_variables	phs
+Framingham Heart Study	61,195	phs000007
+COPDGene	332	phs000179
+Women's Health Initiative (WHI)	6,117	phs000200
+Multi-Ethnic Study of Atherosclerosis (MESA)	22,044	phs000209
+Atherosclerosis Risk in Communities (ARIC)	14,430	phs000280
+Cleveland Family Study	2,325	phs000284
+Coronary Artery Risk Development in Young Adults (CARDIA) Study - Cohort	9,036	phs000285
+Jackson Heart Study	4,084	phs000286
+Cardiovascular Health Study (CHS)	14,657	phs000287
+GENEVA GWAS of VTE	41	phs000289
+GOLDN	107	phs000741
+Hispanic Community Health Study /Study of Latinos (HCHS/SOL)	274	phs000810
+GWAS of Adiposity in Samoans	167	phs000914
+Genetics of Cardiometabolic Health in the Amish	53	phs000956
+NHLBI TOPMed: The Genetic Epidemiology of Asthma in Costa Rica	15	phs000988
+Heart and Vascular Health Study (HVH)	23	phs001013
+Genetic Epidemiology Network of Arteriopathy (GENOA)	1,072	phs001238
