@@ -28,7 +28,7 @@ knitr::opts_chunk$set(tidy=FALSE)
 library(tidyverse)
 library(RColorBrewer)
 
-data_file <- '/projects/topmed/phenotype_tagging/internal_use_exported_data/2018-11-27_1552_dcc_tagging_data/tagged_variables.txt'
+data_file <- 'tagged_variables.txt'
 ```
 
 # Overview of the data
@@ -178,7 +178,7 @@ print(tagged_variable_counts_by_study_ggp)
 
 ## Total number of variables per study
 ```{r total-vars}
-totals_fn <- '/projects/topmed/analysts/emeryl/tagging_data_analysis/2019-04-16/total_traits.txt'
+totals_fn <- 'total_traits.txt'
 total_variables <- read_tsv(totals_fn)
 
 total_variables_and_tagged_counts <- inner_join(total_variables, tagged_variable_counts_by_study)
