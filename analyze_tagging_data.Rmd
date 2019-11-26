@@ -87,14 +87,7 @@ all_tagged_variables <- all_tagged_variables %>%
 ggplot(all_tagged_variables) + geom_bar(aes(x=study_response_status))
 ```
 
-While I've previously included only the studies that were funded for tagging through subcontracts, for my current analysis I'd like to take a look at all of the studies. So the evaluation of this code block is turned off.
-
-```{r subset-studies, eval=FALSE}
-# Save a subset of the data with just the funded studies.
-tagged_variables <- all_tagged_variables %>%
-   subset(study_phs %in% funded_studies) %>% 
-   droplevels()
-```
+While I've previously included only the studies that were funded for tagging through subcontracts, for my current analysis I'd like to take a look at all of the studies.
 
 I added some study abbreviations for concise display.
 ```{r set-study-abbreviations}
@@ -381,6 +374,14 @@ print(tagged_variable_counts_by_milestone_and_study_ggp)
 ```
 
 # Progress and usefulness of quality review
+
+The 3-step quality review process only applied to studies that received subcontract funding for completing the tagging. So subset to only the funded studies.
+
+```{r subset-studies}
+tagged_variables <- tagged_variables %>%
+   subset(study_phs %in% funded_studies) %>% 
+   droplevels()
+```
 
 ## Progress of DCC quality review (step 1)
 ```{r reviewed-by-milestone}
