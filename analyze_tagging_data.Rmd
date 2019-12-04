@@ -28,7 +28,7 @@ knitr::opts_chunk$set(tidy=FALSE)
 library(tidyverse)
 library(RColorBrewer)
 
-data_file <- '/projects/topmed/phenotype_tagging/internal_use_exported_data/2018-11-27_1552_dcc_tagging_data/tagged_variables.txt'
+data_file <- '/projects/topmed/phenotype_tagging/internal_use_exported_data/2019-12-03_1713_dcc_tagging_data/tagged_variables.txt'
 ```
 
 # Overview of the data
