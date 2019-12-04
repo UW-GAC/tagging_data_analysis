@@ -232,8 +232,8 @@ tagged_variable_counts_by_tag_ggp_horiz <-
     no_legend
 ```
 
-```{r tagged-var-count-by-tag-table, results='asis'}
-knitr::kable(tagged_variable_counts_by_tag, align='c')
+```{r tagged-var-count-by-tag-table}
+DT::datatable(tagged_variable_counts_by_tag, options = list(pageLength = 20))
 ```
 
 ```{r tagged-var-count-by-tag-plot, fig.width=panel_width, fig.height=panel_width*panel_asp*length(levels(tagged_variables$milestone)), fig.asp=NULL}
@@ -307,8 +307,8 @@ tagged_variable_counts_by_study_and_tag_ggp <-
 #     )
 ```
 
-```{r tagged-var-count-by-study-and-tag-table, results='asis'}
-knitr::kable(tagged_variable_counts_by_study_and_tag[order(-tagged_variable_counts_by_study_and_tag$tagged_variable_count), ], align='c')
+```{r tagged-var-count-by-study-and-tag-table}
+DT::datatable(tagged_variable_counts_by_study_and_tag[order(-tagged_variable_counts_by_study_and_tag$tagged_variable_count), ], options = list(pageLength = 20))
 ```
 
 ```{r tagged-var-count-by-study-and-tag-plot, fig.width=tag_columns*panel_width*0.25, fig.height=panel_asp*panel_width*(length(levels(tagged_variables$tag_title))/tag_columns)*0.25, fig.asp=NULL}
@@ -365,8 +365,8 @@ tagged_variable_counts_by_milestone_and_study_ggp <-
     legend_on_top
 ```
 
-```{r tagged-var-count-by-milestone-and-study-table, results='asis'}
-knitr::kable(tagged_variable_counts_by_milestone_and_study, align='c')
+```{r tagged-var-count-by-milestone-and-study-table}
+DT::datatable(tagged_variable_counts_by_milestone_and_study, options = list(pageLength = 20))
 ```
 
 ```{r tagged-var-count-by-milestone-and-study-plot}
@@ -449,8 +449,8 @@ proportion_reviewed_by_tag_ggp <-
     legend_on_top
 ```
 
-```{r reviewed-by-tag-table, results='asis'}
-knitr::kable(completed_review_by_tag, align='c')
+```{r reviewed-by-tag-table}
+DT::datatable(completed_review_by_tag, options = list(pageLength = 20))
 ```
 
 ```{r reviewed-by-tag-plot, fig.width=panel_width, fig.height=panel_width*panel_asp*length(levels(tagged_variables$milestone)), fig.asp=NULL}
@@ -544,8 +544,8 @@ review_status_by_tag_ggp_horiz <-
     angled_x_axis_labels
 ```
 
-```{r confirmed-proportion-by-tag-table, results='asis'}
-knitr::kable(review_status_by_tag, align='c')
+```{r confirmed-proportion-by-tag-table}
+DT::datatable(review_status_by_tag, options = list(pageLength = 20))
 ```
 
 ```{r confirmed-proportion-by-tag-plot, fig.width=panel_width, fig.height=panel_width*panel_asp*length(levels(tagged_variables$milestone)), fig.asp=NULL}
@@ -625,8 +625,8 @@ study_response_by_tag_without_na_ggp <-
 
 ```
 
-```{r study-response-agree-proportion-by-tag-table, results='asis'}
-knitr::kable(study_response_agree_proportion_by_tag, align='c')
+```{r study-response-agree-proportion-by-tag-table}
+DT::datatable(study_response_agree_proportion_by_tag, options = list(pageLength = 20))
 ```
 
 ```{r study-response-agree-proportion-by-tag-plot, fig.width=panel_width, fig.height=panel_width*panel_asp*length(levels(tagged_variables$milestone)), fig.asp=NULL}
@@ -694,6 +694,6 @@ print(review_status_by_tag_ggp_horiz)
 ```
 
 
-```{r final-confirmed-proportion-by-tag-table, results='asis'}
-knitr::kable(review_status_by_tag, align='c')
+```{r final-confirmed-proportion-by-tag-table}
+DT::datatable(review_status_by_tag, options = list(pageLength = 20))
 ```
