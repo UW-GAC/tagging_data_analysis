@@ -1,3 +1,7 @@
+# This code needs to be run in a Django shell, and I'm not quire sure how to make
+# that happen. As a result, I just run it interactively after launching
+# shell_plus on modu.
+
 # ssh modu
 # workon phenotype_inventory
 # Start with shell_plus
