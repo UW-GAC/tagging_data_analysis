@@ -1,12 +1,16 @@
+#!/usr/bin/env Rscript
+
+# An updated version of the script used to generate files for my April 2019
+# TOPMed presentation.
+
 ## ----setup, message=FALSE------------------------------------------------
 library(tidyverse)
 library(RColorBrewer)
-setwd('/Users/emeryl/Documents/2019-04-TOPMed-meeting')
 
 ## ----input-files---------------------------------------------------------
-tagged_variables_file <- '/projects/topmed/phenotype_tagging/internal_use_exported_data/2018-11-27_1552_dcc_tagging_data/tagged_variables.txt'
-total_variable_counts_file <- '/projects/topmed/analysts/emeryl/tagging_data_analysis/2019-04-16/total_traits.txt'
-umls_mappings_file <- '/Users/emeryl/Documents/2019-04-TOPMed-meeting/2019-04-16_tags_mapped_to_UMLS.tsv'
+tagged_variables_file <- '/projects/topmed/phenotype_tagging/internal_use_exported_data/2019-12-03_1713_dcc_tagging_data/tagged_variables.txt'
+total_variable_counts_file <- 'total_traits.txt'
+umls_mappings_file <- '2019-04-16_tags_mapped_to_UMLS.tsv'
 
 ## ----read-tagging-data, results='hide'-----------------------------------
 tagged_variable_col_types <- cols(
@@ -150,7 +154,7 @@ tagged_variable_counts_by_study_ggp <-
     xlab('Study') +
     ylab('Number of tagged variables') +
     coord_flip()
-ggsave('figures/tagged_variable_count_by_study.png', plot=tagged_variable_counts_by_study_ggp, width=plot_width, height=plot_height, dpi=plot_dpi, scale=0.75)
+ggsave('talk_figures/tagged_variable_count_by_study.png', plot=tagged_variable_counts_by_study_ggp, width=plot_width, height=plot_height, dpi=plot_dpi, scale=0.75)
 
 ## ----proportion-total-vars-tagged----------------------------------------
 total_variables_and_tagged_counts <- 
@@ -188,7 +192,7 @@ total_variables_and_tagged_counts_ggp <-
     ylab('dbGaP variables') +
     xlab('Study') +
     coord_flip()
-ggsave('figures/tagged_variable_count_by_study_proportion_fill.png', plot=total_variables_and_tagged_counts_ggp, width=plot_width, height=plot_height, dpi=plot_dpi, scale=0.75)
+ggsave('talk_figures/tagged_variable_count_by_study_proportion_fill.png', plot=total_variables_and_tagged_counts_ggp, width=plot_width, height=plot_height, dpi=plot_dpi, scale=0.75)
 # These are all so faint it's very difficult to see.
 
 total_variables_and_tagged_counts_ggp <- 
@@ -200,7 +204,7 @@ total_variables_and_tagged_counts_ggp <-
     xlab('Study') +
     coord_flip() +
     theme(legend.justification=c(1, 1), legend.position=c(0.95, 0.95), legend.background=element_rect(color=bar_border_color))
-ggsave('figures/tagged_proportion_by_study_n_variables_fill.png', plot=total_variables_and_tagged_counts_ggp, width=plot_width, height=plot_height, dpi=plot_dpi, scale=0.75)
+ggsave('talk_figures/tagged_proportion_by_study_n_variables_fill.png', plot=total_variables_and_tagged_counts_ggp, width=plot_width, height=plot_height, dpi=plot_dpi, scale=0.75)
 # This also doesn't look great.
 
 y_pad <- 1200
@@ -216,7 +220,7 @@ total_variables_and_tagged_counts_ggp <-
     no_legend +
     coord_cartesian(ylim=c(0, max(total_variables_and_tagged_counts$n_variables)+(y_pad*2))) +
     coord_flip()
-ggsave('figures/tagged_variable_count_and_proportion_by_study.png', plot=total_variables_and_tagged_counts_ggp, width=plot_width, height=plot_height, dpi=plot_dpi, scale=0.75)
+ggsave('talk_figures/tagged_variable_count_and_proportion_by_study.png', plot=total_variables_and_tagged_counts_ggp, width=plot_width, height=plot_height, dpi=plot_dpi, scale=0.75)
 
 ## ----tagged-var-count-by-tag---------------------------------------------
 tagged_variable_counts_by_tag <- 
@@ -438,7 +442,7 @@ review_status_by_tag_ggp_horiz <-
     ylab('Number of tagged variables') +
     xlab('Tag')
 
-ggsave('figures/confirmed_tagged_variables_by_tag.png', plot=review_status_by_tag_ggp_horiz, width=plot_width, height=plot_height, dpi=plot_dpi, scale=0.9)
+ggsave('talk_figures/confirmed_tagged_variables_by_tag.png', plot=review_status_by_tag_ggp_horiz, width=plot_width, height=plot_height, dpi=plot_dpi, scale=0.9)
 
 
 ## ----collapse-confirmed-or-not-by-tag-------------------------------------
@@ -466,7 +470,7 @@ review_status_by_domain_ggp <-
     coord_cartesian(ylim=c(0, 2000)) +
     ylab('Count') +
     xlab('Phenotype area')
-ggsave('figures/confirmed_tagged_variables_by_domain.png', plot=review_status_by_domain_ggp, width=plot_width, height=plot_height, dpi=plot_dpi, scale=0.6)
+ggsave('talk_figures/confirmed_tagged_variables_by_domain.png', plot=review_status_by_domain_ggp, width=plot_width, height=plot_height, dpi=plot_dpi, scale=0.6)
 
 ## ----plot-harmonized-trait---------------------------------
 subcohort_file <- '/projects/topmed/phenotype_harmonization/datasets/demographic/v3/combined_dataset/topmed_dcc_demographic_v3.txt'
@@ -505,7 +509,7 @@ ggplot(harmonized_data %>% filter(!is.na(height_baseline_1))) +
     theme_bw() +
     theme(legend.position='none') +
     xlab('Harmonized height (cm)')
-ggsave('figures/harmonized_height_density_facets.png', height=5, width=11, units='in')
+ggsave('talk_figures/harmonized_height_density_facets.png', height=5, width=11, units='in')
 
 ggplot(harmonized_data %>% filter(!is.na(height_baseline_1))) +
     geom_violin(aes(y=height_baseline_1, x=topmed_abbreviation, fill=subcohort_name), alpha=0.75) +
@@ -520,7 +524,7 @@ ggplot(harmonized_data %>% filter(!is.na(height_baseline_1))) +
     study_fill +
     theme_bw() +
     xlab('Harmonized height (cm)')
-ggsave('figures/harmonized_height_density.png', height=5, width=11, units='in')
+ggsave('talk_figures/harmonized_height_density.png', height=5, width=11, units='in')
 
 ggplot(harmonized_data %>% filter(!is.na(height_baseline_1))) +
     geom_boxplot(aes(y=height_baseline_1, x=topmed_abbreviation, fill=topmed_abbreviation),
@@ -531,7 +535,7 @@ ggplot(harmonized_data %>% filter(!is.na(height_baseline_1))) +
     xlab('Study') +
     coord_flip() +
     no_legend
-ggsave('figures/harmonized_height_boxplot.png', height=5, width=11, units='in', scale=0.75)
+ggsave('talk_figures/harmonized_height_boxplot.png', height=5, width=11, units='in', scale=0.75)
 
 ggplot(harmonized_data %>% filter(!is.na(height_baseline_1))) +
     geom_boxplot(aes(y=height_baseline_1, x=topmed_abbreviation, fill=topmed_abbreviation),
@@ -542,7 +546,7 @@ ggplot(harmonized_data %>% filter(!is.na(height_baseline_1))) +
     xlab('Study') +
     coord_flip() +
     no_legend
-ggsave('figures/harmonized_height_boxplot_no_varwidth.png', height=5, width=11, units='in', scale=0.75)
+ggsave('talk_figures/harmonized_height_boxplot_no_varwidth.png', height=5, width=11, units='in', scale=0.75)
 ## -----get-cardia-cac-variables-that-may-be-confusing-------------------------------------------
 cardia_cac_examples <- tagged_variables %>%
     filter(study_shortname=='CARDIA', tag_title=='CAC', is_archived==FALSE) %>%
