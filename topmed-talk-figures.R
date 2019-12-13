@@ -4,8 +4,14 @@
 # TOPMed presentation.
 
 ## ----setup, message=FALSE------------------------------------------------
-library(tidyverse)
+library(dplyr)
+library(forcats)
+library(ggplot2)
+library(janitor)
 library(RColorBrewer)
+library(readr)
+library(stringr)
+library(tidyr)
 
 ## ----input-files---------------------------------------------------------
 tagged_variables_file <- '/projects/topmed/phenotype_tagging/internal_use_exported_data/2019-12-03_1713_dcc_tagging_data/tagged_variables.txt'
@@ -474,6 +480,53 @@ review_status_by_domain_ggp <-
     ylab('Count') +
     xlab('Phenotype area')
 ggsave(file.path(out_dir, 'confirmed_tagged_variables_by_domain.png'), plot=review_status_by_domain_ggp, width=plot_width, height=plot_height, dpi=plot_dpi, scale=0.6)
+
+## ----reviewed-status-by-study-and-tag-table---------------------------------
+# Trying to make the table shown in scratchpad with date 2019-12-06
+
+str(tagged_variables)
+
+tag_summary_by_study <-
+  tagged_variables %>%
+  subset(is_archived==FALSE) %>%
+  group_by(tag_title, study_shortname, .drop=FALSE) %>% 
+  summarize(tagged_variable_count=n()) %>%
+  pivot_wider(names_from=study_shortname, values_from=tagged_variable_count) %>%
+  rename(`Phenotype tag`=tag_title) %>%
+  adorn_totals(c('row', 'col'))
+write.table(tag_summary_by_study, file=file.path(out_dir, 'tag_summary_by_study.txt'), quote=FALSE, sep='\t', na='', row.names=FALSE)
+
+# This version is more explicit about what's going on in the review process, at the expense of being overcomplicated
+tag_summary_by_review_status <-
+  tagged_variables %>%
+  group_by(tag_title, .drop=FALSE) %>%
+  summarize(
+    total=n(),
+    confirmed_at_1=sum(dcc_review_status=='1', na.rm=TRUE),  # status is confirmed
+    flagged_at_1=sum(dcc_review_status=='0', na.rm=TRUE),  # status is flagged for study review
+    removed_at_2=sum(dcc_review_status=='0' & study_response_status=='1', na.rm=TRUE),  # study response agreed to remove
+    explanation_at_2=sum(dcc_review_status=='0' & study_response_status=='0', na.rm=TRUE),  # study response gave explanation
+    confirmed_at_3=sum(!is.na(dcc_decision_decision) & dcc_decision_decision=='1', na.rm=TRUE),  # dcc decision is to confirm
+    removed_at_3=sum(!is.na(dcc_decision_decision) & dcc_decision_decision=='0', na.rm=TRUE),  # dcc decision is to remove
+    total_passed=sum(!is_archived, na.rm=TRUE),  # 
+    total_failed=sum(is_archived, na.rm=TRUE)  #
+      )
+
+# This is the simplified version, in terms of number removed every round of review
+tag_summary_by_review_status <-
+  tagged_variables %>%
+  group_by(tag_title, .drop=FALSE) %>%
+  summarize(
+    `Total tagged`=n(),
+    `Flagged in step 1`=sum(dcc_review_status=='0', na.rm=TRUE),  # status is flagged for study review
+    `Failed in step 2`=sum(dcc_review_status=='0' & study_response_status=='1', na.rm=TRUE),  # study response agreed to remove
+    `Failed in step 3`=sum(!is.na(dcc_decision_decision) & dcc_decision_decision=='0', na.rm=TRUE),  # dcc decision is to remove
+    `Total failed`=sum(is_archived, na.rm=TRUE),
+    `Total passed`=sum(!is_archived, na.rm=TRUE) 
+  ) %>%
+  rename(`Phenotype tag`=tag_title)
+write.table(tag_summary_by_review_status, file=file.path(out_dir, 'tag_summary_by_review_status.txt'), quote=FALSE, sep='\t', na='', row.names=FALSE)
+
 
 ## ----plot-harmonized-trait---------------------------------
 subcohort_file <- '/projects/topmed/phenotype_harmonization/datasets/demographic/v3/combined_dataset/topmed_dcc_demographic_v3.txt'
