@@ -4,14 +4,8 @@
 # TOPMed presentation.
 
 ## ----setup, message=FALSE------------------------------------------------
-library(dplyr)
-library(forcats)
-library(ggplot2)
-library(janitor)
+library(tidyverse)
 library(RColorBrewer)
-library(readr)
-library(stringr)
-library(tidyr)
 
 ## ----input-files---------------------------------------------------------
 tagged_variables_file <- '/projects/topmed/phenotype_tagging/internal_use_exported_data/2019-12-03_1713_dcc_tagging_data/tagged_variables.txt'
@@ -19,7 +13,7 @@ total_variable_counts_file <- 'total_traits.txt'
 umls_mappings_file <- '2019-04-16_tags_mapped_to_UMLS.tsv'
 
 ## ----output-files--------------------------------------------------------
-out_dir <- 'tagging_figures_and_tables'
+out_dir <- 'april_topmed_talk_figures'
 
 ## ----read-tagging-data, results='hide'-----------------------------------
 tagged_variable_col_types <- cols(
@@ -103,7 +97,7 @@ all_tagged_variables <- all_tagged_variables %>%
 # ggplot(all_tagged_variables) + geom_bar(aes(x=dcc_review_status))
 all_tagged_variables <- all_tagged_variables %>%
     mutate(dcc_review_status=recode_factor(dcc_review_status, !!!list('1'='confirmed', '0'='needs study followup')))
-ggplot(all_tagged_variables) + geom_bar(aes(x=dcc_review_status))
+# ggplot(all_tagged_variables) + geom_bar(aes(x=dcc_review_status))
 
 # Add sensible labels for the study response status levels.
 # ggplot(all_tagged_variables) + geom_bar(aes(x=study_response_status))
@@ -294,7 +288,8 @@ for (tag in tags_to_plot)
         current_theme +
         no_legend +
         ggtitle(tag)
-    print(specific_tag_tagged_variable_count_by_study_ggp)
+    cleaned_tag <- str_to_lower(str_replace_all(tag, "[^[:alnum:]]", "_"))
+    ggsave(file.path(out_dir, paste0(cleaned_tag, '_counts_by_study.png')), specific_tag_tagged_variable_count_by_study_ggp)
 }
 
 ## ----round-1-review-confirmed-proportion-by-study---------------------------------------
@@ -481,53 +476,6 @@ review_status_by_domain_ggp <-
     xlab('Phenotype area')
 ggsave(file.path(out_dir, 'confirmed_tagged_variables_by_domain.png'), plot=review_status_by_domain_ggp, width=plot_width, height=plot_height, dpi=plot_dpi, scale=0.6)
 
-## ----reviewed-status-by-study-and-tag-table---------------------------------
-# Trying to make the table shown in scratchpad with date 2019-12-06
-
-str(tagged_variables)
-
-tag_summary_by_study <-
-  tagged_variables %>%
-  subset(is_archived==FALSE) %>%
-  group_by(tag_title, study_shortname, .drop=FALSE) %>% 
-  summarize(tagged_variable_count=n()) %>%
-  pivot_wider(names_from=study_shortname, values_from=tagged_variable_count) %>%
-  rename(`Phenotype tag`=tag_title) %>%
-  adorn_totals(c('row', 'col'))
-write.table(tag_summary_by_study, file=file.path(out_dir, 'tag_summary_by_study.txt'), quote=FALSE, sep='\t', na='', row.names=FALSE)
-
-# This version is more explicit about what's going on in the review process, at the expense of being overcomplicated
-tag_summary_by_review_status <-
-  tagged_variables %>%
-  group_by(tag_title, .drop=FALSE) %>%
-  summarize(
-    total=n(),
-    confirmed_at_1=sum(dcc_review_status=='1', na.rm=TRUE),  # status is confirmed
-    flagged_at_1=sum(dcc_review_status=='0', na.rm=TRUE),  # status is flagged for study review
-    removed_at_2=sum(dcc_review_status=='0' & study_response_status=='1', na.rm=TRUE),  # study response agreed to remove
-    explanation_at_2=sum(dcc_review_status=='0' & study_response_status=='0', na.rm=TRUE),  # study response gave explanation
-    confirmed_at_3=sum(!is.na(dcc_decision_decision) & dcc_decision_decision=='1', na.rm=TRUE),  # dcc decision is to confirm
-    removed_at_3=sum(!is.na(dcc_decision_decision) & dcc_decision_decision=='0', na.rm=TRUE),  # dcc decision is to remove
-    total_passed=sum(!is_archived, na.rm=TRUE),  # 
-    total_failed=sum(is_archived, na.rm=TRUE)  #
-      )
-
-# This is the simplified version, in terms of number removed every round of review
-tag_summary_by_review_status <-
-  tagged_variables %>%
-  group_by(tag_title, .drop=FALSE) %>%
-  summarize(
-    `Total tagged`=n(),
-    `Flagged in step 1`=sum(dcc_review_status=='0', na.rm=TRUE),  # status is flagged for study review
-    `Failed in step 2`=sum(dcc_review_status=='0' & study_response_status=='1', na.rm=TRUE),  # study response agreed to remove
-    `Failed in step 3`=sum(!is.na(dcc_decision_decision) & dcc_decision_decision=='0', na.rm=TRUE),  # dcc decision is to remove
-    `Total failed`=sum(is_archived, na.rm=TRUE),
-    `Total passed`=sum(!is_archived, na.rm=TRUE) 
-  ) %>%
-  rename(`Phenotype tag`=tag_title)
-write.table(tag_summary_by_review_status, file=file.path(out_dir, 'tag_summary_by_review_status.txt'), quote=FALSE, sep='\t', na='', row.names=FALSE)
-
-
 ## ----plot-harmonized-trait---------------------------------
 subcohort_file <- '/projects/topmed/phenotype_harmonization/datasets/demographic/v3/combined_dataset/topmed_dcc_demographic_v3.txt'
 height_file <- '/projects/topmed/phenotype_harmonization/datasets/baseline_common_covariates/v2/combined_dataset/topmed_dcc_baseline_common_covariates_v2.txt'
@@ -559,30 +507,31 @@ sum(na.omit(common_covariates$age_at_height_baseline_1 < 18)) # 1037 are younger
 sum(is.na(common_covariates$age_at_height_baseline_1)) # 2037 are missing values
 
 # Plot it
-ggplot(harmonized_data %>% filter(!is.na(height_baseline_1))) +
+ggp <- ggplot(harmonized_data %>% filter(!is.na(height_baseline_1))) +
     geom_density(aes(x=height_baseline_1, fill=subcohort_name), alpha=0.75) +
     facet_wrap( ~ topmed_abbreviation, ncol=2, scales='free_y') +
     theme_bw() +
     theme(legend.position='none') +
     xlab('Harmonized height (cm)')
-ggsave(file.path(out_dir, 'harmonized_height_density_facets.png'), height=5, width=11, units='in')
+ggsave(file.path(out_dir, 'harmonized_height_density_facets.png'), ggp, height=5, width=11, units='in')
 
-ggplot(harmonized_data %>% filter(!is.na(height_baseline_1))) +
+ggp <- ggplot(harmonized_data %>% filter(!is.na(height_baseline_1))) +
     geom_violin(aes(y=height_baseline_1, x=topmed_abbreviation, fill=subcohort_name), alpha=0.75) +
     # facet_grid(topmed_abbreviation ~ ., scales='free_y') +
     theme_bw() +
     theme(legend.position='none') +
     ylab('Harmonized height (cm)') +
     coord_flip()
+ggsave(file.path(out_dir, 'harmonized_height_violins.png'), ggp, height=5, width=11, units='in')
 
-ggplot(harmonized_data %>% filter(!is.na(height_baseline_1))) +
+ggp <- ggplot(harmonized_data %>% filter(!is.na(height_baseline_1))) +
     geom_density(aes(x=height_baseline_1, fill=topmed_abbreviation), alpha=0.75) +
     study_fill +
     theme_bw() +
     xlab('Harmonized height (cm)')
-ggsave(file.path(out_dir, 'harmonized_height_density.png'), height=5, width=11, units='in')
+ggsave(file.path(out_dir, 'harmonized_height_density.png'), ggp, height=5, width=11, units='in')
 
-ggplot(harmonized_data %>% filter(!is.na(height_baseline_1))) +
+ggp <- ggplot(harmonized_data %>% filter(!is.na(height_baseline_1))) +
     geom_boxplot(aes(y=height_baseline_1, x=topmed_abbreviation, fill=topmed_abbreviation),
                  varwidth=TRUE, outlier.size=0.3, outlier.stroke=0.25, lwd=0.25, fatten=2) +
     study_fill +
@@ -591,9 +540,9 @@ ggplot(harmonized_data %>% filter(!is.na(height_baseline_1))) +
     xlab('Study') +
     coord_flip() +
     no_legend
-ggsave(file.path(out_dir, 'harmonized_height_boxplot.png'), height=5, width=11, units='in', scale=0.75)
+ggsave(file.path(out_dir, 'harmonized_height_boxplot.png'), ggp, height=5, width=11, units='in', scale=0.75)
 
-ggplot(harmonized_data %>% filter(!is.na(height_baseline_1))) +
+ggp <- ggplot(harmonized_data %>% filter(!is.na(height_baseline_1))) +
     geom_boxplot(aes(y=height_baseline_1, x=topmed_abbreviation, fill=topmed_abbreviation),
                  outlier.size=0.3, outlier.stroke=0.25, lwd=0.25, fatten=2) +
     study_fill +
@@ -602,7 +551,7 @@ ggplot(harmonized_data %>% filter(!is.na(height_baseline_1))) +
     xlab('Study') +
     coord_flip() +
     no_legend
-ggsave(file.path(out_dir, 'harmonized_height_boxplot_no_varwidth.png'), height=5, width=11, units='in', scale=0.75)
+ggsave(file.path(out_dir, 'harmonized_height_boxplot_no_varwidth.png'), ggp, height=5, width=11, units='in', scale=0.75)
 ## -----get-cardia-cac-variables-that-may-be-confusing-------------------------------------------
 cardia_cac_examples <- tagged_variables %>%
     filter(study_shortname=='CARDIA', tag_title=='CAC', is_archived==FALSE) %>%
