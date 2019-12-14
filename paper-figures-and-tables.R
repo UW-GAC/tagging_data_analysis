@@ -186,18 +186,30 @@ review_status_by_tag$review_status <- as.factor(review_status_by_tag$review_stat
 
 # Get the count from the tag with the highest number of tagged variables, after Medication use is removed.
 highest_non_med_count <-
-  tagged_variables %>%
+  review_status_by_tag %>%
+  filter(tag_title != "Medication/supplement use") %>%
   group_by(tag_title) %>%
-  filter(tag_title != "Medication/supplement use") %>% 
-  summarize(count=n()) %>%
-  filter(count == max(count))
-highest_non_med_count <- highest_non_med_count$count[1]
+  summarize(tagged_variable_count=sum(tagged_variable_count)) %>% 
+  filter(tagged_variable_count == max(tagged_variable_count)) %>%
+  pull(tagged_variable_count)
+
+med_use_count <- review_status_by_tag %>%
+  filter(tag_title == "Medication/supplement use") %>%
+  ungroup() %>%
+  summarize(tagged_variable_count=sum(tagged_variable_count)) %>% 
+  pull(tagged_variable_count)
 
 # Reorder by tag name instead
 # tagged_variables$study_shortname <- factor(tagged_variables$study_shortname, levels=tagged_variable_counts_by_study$study_shortname[order(-tagged_variable_counts_by_study$tagged_variable_count)])
 review_status_by_tag$tag_title <- factor(review_status_by_tag$tag_title, levels=sort(levels(review_status_by_tag$tag_title)))
 review_status_by_tag <- review_status_by_tag[order(review_status_by_tag$tag_title), ]
 review_status_by_tag$in_first_half <- as.numeric(rownames(review_status_by_tag)) >= nrow(review_status_by_tag)/2
+
+annotation_data <- review_status_by_tag %>%
+  filter(tag_title=="Medication/supplement use") %>%
+  ungroup() %>%
+  group_by(tag_title, in_first_half) %>%
+  summarize(tagged_variable_count=sum(tagged_variable_count))
 
 review_status_by_tag_ggp_horiz <-
   ggplot(review_status_by_tag) +
@@ -215,7 +227,12 @@ review_status_by_tag_ggp_horiz <-
   no_legend_title +
   theme(axis.text.x=element_text(size=7)) +
   ylab('Number of tagged variables') +
-  xlab('Tag')
+  xlab('Tag') +
+  geom_segment(data=annotation_data, aes(x=tag_title, xend=tag_title),
+               y=highest_non_med_count, yend=highest_non_med_count*1.08,
+               arrow=arrow(length=unit(0.03, 'npc'))) +
+  geom_label(data=annotation_data, aes(x=tag_title, label=format(tagged_variable_count, big.mark=',')),
+            y=highest_non_med_count*0.95)
 ggsave(file.path(out_dir, 'confirmed_tagged_variables_by_tag.png'), plot=review_status_by_tag_ggp_horiz, width=plot_width, height=plot_height, dpi=plot_dpi, scale=0.9)
 
 
@@ -230,6 +247,21 @@ review_status_by_domain <-
     summarize(tagged_variable_count=n()) %>% 
     mutate(review_status = ifelse(is_archived, 'Failed review', 'Passed review'))
 
+# Get the count from the domain with the highest number of tagged variables, after Medication use is removed.
+domain_highest_non_med_count <-
+  review_status_by_domain %>%
+  filter(phenotype_area != "Medication/supplement use") %>%
+  summarize(tagged_variable_count=sum(tagged_variable_count)) %>% 
+  ungroup() %>%
+  filter(tagged_variable_count == max(tagged_variable_count)) %>%
+  pull(tagged_variable_count)
+
+med_use_count <- review_status_by_domain %>%
+  filter(phenotype_area == "Medication/supplement use") %>%
+  summarize(tagged_variable_count=sum(tagged_variable_count)) %>% 
+  ungroup() %>%
+  pull(tagged_variable_count)
+
 review_status_by_domain_ggp <-
     ggplot(review_status_by_domain) +
     geom_bar(aes(x=phenotype_area, y=tagged_variable_count, fill=review_status), stat='identity', position=position_stack(reverse=TRUE), color=bar_border_color) +
@@ -241,11 +273,15 @@ review_status_by_domain_ggp <-
     no_legend_title +
     theme(legend.justification=c(0.5,1), legend.direction='horizontal', legend.background=element_blank()) +
     angled_x_axis_labels +
-    # coord_cartesian(ylim=c(0, highest_non_med_count*1.05)) +
     theme(strip.text=element_blank()) +
-    coord_cartesian(ylim=c(0, 2000)) +
+    coord_cartesian(ylim=c(0, domain_highest_non_med_count*1.05)) +
+    # coord_cartesian(ylim=c(0, 2000)) +
     ylab('Count') +
-    xlab('Phenotype area')
+    xlab('Phenotype area') +
+    annotate("label", x="Medication/supplement use", y=domain_highest_non_med_count*0.95, label=format(med_use_count, big.mark=',')) +
+    annotate("segment", x="Medication/supplement use", xend="Medication/supplement use", 
+             y=domain_highest_non_med_count, yend=domain_highest_non_med_count*1.08,
+             arrow=arrow(length=unit(0.03, 'npc')))
 ggsave(file.path(out_dir, 'confirmed_tagged_variables_by_domain.png'), plot=review_status_by_domain_ggp, width=plot_width, height=plot_height, dpi=plot_dpi, scale=0.6)
 
 ## ----reviewed-status-by-study-and-tag-table---------------------------------
