@@ -44,8 +44,8 @@ tagged_variable_col_types <- cols(
   is_archived = col_logical(),
   milestone = col_factor(NULL)
 )
-all_tagged_variables <- read_tsv(tagged_variables_file, na=c('', 'None'), col_types=tagged_variable_col_types)
-problems(all_tagged_variables)  # No problems!
+tagged_variables <- read_tsv(tagged_variables_file, na=c('', 'None'), col_types=tagged_variable_col_types)
+problems(tagged_variables)  # No problems!
 
 ## ----add-shortname-------------------------------------------------------
 funded_studies <- c('MESA' = 209, 'JHS' = 286, 'ARIC' = 280, 'CHS' = 287, 'WHI' = 200, 'FHS' = 7, 'CARDIA' = 285)
@@ -60,7 +60,7 @@ study_shortnames <- study_shortnames[order(names(study_shortnames))]
 phs_to_shortname <- names(study_shortnames)
 names(phs_to_shortname) <- as.character(study_shortnames)
 phs_to_shortname <- as.list(phs_to_shortname)
-tagged_variables <- all_tagged_variables %>% 
+tagged_variables <- tagged_variables %>% 
     mutate(study_shortname=recode_factor(study_phs, !!!phs_to_shortname))
 
 ## ----total-variable-data-process, results='hide'-------------------------
@@ -93,19 +93,19 @@ umls_sheet <- umls_sheet %>% mutate(phenotype_area = factor(phenotype_area))
 
 ## ----set-factor-levels, fig.show='hide', results='hold'------------------
 # Order the milestone levels properly.
-all_tagged_variables <- all_tagged_variables %>% 
+tagged_variables <- tagged_variables %>% 
     mutate(milestone=fct_relevel(milestone, c('1', '2', '3', '4')))
 
 # Add sensible labels for the DCC status levels.
-all_tagged_variables <- all_tagged_variables %>%
+tagged_variables <- tagged_variables %>%
     mutate(dcc_review_status=recode_factor(dcc_review_status, !!!list('1'='confirmed', '0'='needs study followup')))
 
 # Add sensible labels for the study response status levels.
-all_tagged_variables <- all_tagged_variables %>%
+tagged_variables <- tagged_variables %>%
     mutate(study_response_status=recode_factor(study_response_status, !!!list('1'='agreed to remove', '0'='gave explanation')))
 
 # Add sensible labels for the dcc decision status levels.
-all_tagged_variables <- all_tagged_variables %>%
+tagged_variables <- tagged_variables %>%
   mutate(dcc_decision_decision=recode_factor(dcc_decision_decision, !!!list('1'='confirmed', '0'='removed')))
 
 ## ----print-cleaned-tagging-data, results='hold'--------------------------
