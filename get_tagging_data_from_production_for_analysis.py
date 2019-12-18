@@ -53,11 +53,14 @@ header = ('tag_id', 'tag_title', 'variable_phv', 'variable_name', 'variable_desc
           'dcc_decision_decision', 'dcc_decision_comment', 'dcc_decision_creator',
           'is_archived', 'milestone')
 
-tagged_trait_data = TaggedTrait.objects.select_related('trait__source_dataset',
-                                   'dcc_review',
-                                   'dcc_review__creator',
-                                   'dcc_review__study_response',
-                                   'dcc_review__dcc_decision',
+# Filter out deprecated source study versions (handles CARDIA issue with 3 taggedtraits)
+# Pull out the relevant fields to an LoL
+tagged_trait_data = TaggedTrait.objects.filter(trait__source_dataset__source_study_version__i_is_deprecated=False
+    ).select_related('trait__source_dataset',
+                     'dcc_review',
+                     'dcc_review__creator',
+                     'dcc_review__study_response',
+                     'dcc_review__dcc_decision',
 ).values_list(
     'tag__pk',
     'tag__title',
@@ -83,6 +86,7 @@ tagged_trait_data = TaggedTrait.objects.select_related('trait__source_dataset',
     'dcc_review__dcc_decision__creator__name',
     'archived',
 )
+# tagged_trait_data.count() # 17063 as of 2019-12-18 after final results (excluding CARDIA duplicates)
 
 tagged_trait_data_with_milestone = [row + (milestones[row[header.index('tag_title')]], ) for row in tagged_trait_data]
 

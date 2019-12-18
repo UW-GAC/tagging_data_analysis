@@ -13,7 +13,7 @@ library(stringr)
 library(tidyr)
 
 ## ----input-files---------------------------------------------------------
-tagged_variables_file <- '/projects/topmed/phenotype_tagging/internal_use_exported_data/2019-12-03_1713_dcc_tagging_data/tagged_variables.txt'
+tagged_variables_file <- '/projects/topmed/phenotype_tagging/internal_use_exported_data/2019-12-18_1505_dcc_tagging_data/tagged_variables.txt'
 total_variable_counts_file <- 'total_traits.txt'
 umls_mappings_file <- '2019-04-16_tags_mapped_to_UMLS.tsv'
 
