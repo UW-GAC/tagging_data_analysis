@@ -108,6 +108,9 @@ tagged_variables <- tagged_variables %>%
 tagged_variables <- tagged_variables %>%
   mutate(dcc_decision_decision=recode_factor(dcc_decision_decision, !!!list('1'='confirmed', '0'='removed')))
 
+# Save the final data to put in the paper repository
+write.table(tagged_variables, file=file.path(out_dir, 'tagged_variables_cleaned.txt'), quote=FALSE, sep='\t', na='', row.names=FALSE)
+
 ## ----print-cleaned-tagging-data, results='hold'--------------------------
 options(width=400)
 print(tagged_variables, n_extra=30)
