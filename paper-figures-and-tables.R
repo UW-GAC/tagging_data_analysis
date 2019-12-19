@@ -108,6 +108,10 @@ tagged_variables <- tagged_variables %>%
 tagged_variables <- tagged_variables %>%
   mutate(dcc_decision_decision=recode_factor(dcc_decision_decision, !!!list('1'='confirmed', '0'='removed')))
 
+# Reorder factor levels for tag_title
+tagged_variables <- tagged_variables %>%
+  mutate(tag_title = fct_relevel(tag_title, sort))
+
 # Save the final data to put in the paper repository
 write.table(tagged_variables, file=file.path(out_dir, 'tagged_variables_cleaned.txt'), quote=FALSE, sep='\t', na='', row.names=FALSE)
 
@@ -319,17 +323,34 @@ tag_summary_by_review_status <-
       )
 
 # This is the simplified version, in terms of number removed every round of review
-tag_summary_by_review_status <-
+tag_summary_by_review_status_funded <-
   tagged_variables %>%
+  filter(study_shortname %in% names(funded_studies)) %>%
   group_by(tag_title, .drop=FALSE) %>%
   summarize(
     `Total tagged`=n(),
-    `Flagged in step 1`=sum(dcc_review_status=='0', na.rm=TRUE),  # status is flagged for study review
-    `Failed in step 2`=sum(dcc_review_status=='0' & study_response_status=='1', na.rm=TRUE),  # study response agreed to remove
-    `Failed in step 3`=sum(!is.na(dcc_decision_decision) & dcc_decision_decision=='0', na.rm=TRUE),  # dcc decision is to remove
+    `Flagged in step 1`=sum(dcc_review_status=='needs study followup', na.rm=TRUE),  # status is flagged for study review
+    `Failed in step 2`=sum(dcc_review_status=='needs study followup' & study_response_status=='agreed to remove', na.rm=TRUE),  # study response agreed to remove
+    `Failed in step 3`=sum(!is.na(dcc_decision_decision) & dcc_decision_decision=='removed', na.rm=TRUE),  # dcc decision is to remove
     `Total failed`=sum(is_archived, na.rm=TRUE),
     `Total passed`=sum(!is_archived, na.rm=TRUE) 
   ) %>%
-  rename(`Phenotype tag`=tag_title)
-write.table(tag_summary_by_review_status, file=file.path(out_dir, 'tag_summary_by_review_status.txt'), quote=FALSE, sep='\t', na='', row.names=FALSE)
+  arrange(tag_title) %>%
+  rename(`Phenotype tag`=tag_title) %>%
+  adorn_totals("row")
+write.table(tag_summary_by_review_status, file=file.path(out_dir, 'tag_summary_by_review_status_funded.txt'), quote=FALSE, sep='\t', na='', row.names=FALSE)
+
+tag_summary_by_review_status_nonfunded <-
+  tagged_variables %>%
+  filter( !(study_shortname %in% names(funded_studies)) ) %>%
+  group_by(tag_title, .drop=FALSE) %>%
+  summarize(
+    `Total tagged`=n(),
+    `Total failed`=sum(is_archived, na.rm=TRUE),
+    `Total passed`=sum(!is_archived, na.rm=TRUE) 
+  ) %>%
+  arrange(tag_title) %>%
+  rename(`Phenotype tag`=tag_title) %>%
+  adorn_totals("row")
+write.table(tag_summary_by_review_status, file=file.path(out_dir, 'tag_summary_by_review_status_nonfunded.txt'), quote=FALSE, sep='\t', na='', row.names=FALSE)
 
