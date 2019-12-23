@@ -305,9 +305,39 @@ tag_summary_by_study <-
   group_by(tag_title, study_shortname, .drop=FALSE) %>% 
   summarize(tagged_variable_count=n()) %>%
   pivot_wider(names_from=study_shortname, values_from=tagged_variable_count) %>%
-  rename(`Phenotype tag`=tag_title) %>%
-  adorn_totals(c('row', 'col'))
+  rename(`Phenotype tag`=tag_title)
+
+n_studies <- apply(tag_summary_by_study[-1], MARGIN=1, FUN=function(x){sum(x > 0)})
+n_studies <- c(n_studies, NA)
+
+tag_summary_by_study <-
+  tag_summary_by_study %>%
+  adorn_totals(c('row', 'col')) %>%
+  mutate(`N studies`=n_studies)
+
 write.table(tag_summary_by_study, file=file.path(out_dir, 'tag_summary_by_study.txt'), quote=FALSE, sep='\t', na='', row.names=FALSE)
+
+# Cumulative frequency distribution of N studies
+n_studies_tab <- as.data.frame(table(tag_summary_by_study$`N studies`[seq(nrow(tag_summary_by_study) - 1)]))
+n_studies_tab <- as_tibble(n_studies_tab)
+n_studies_tab <- 
+  n_studies_tab %>%
+  mutate(Var1=as.integer(Var1)) %>%
+  rename(
+    `N studies`=Var1,
+    `Frequency`=Freq
+    ) %>%
+  arrange(-`N studies`) %>%
+  mutate(`Cumulative frequency`=cumsum(Frequency))
+
+write.table(n_studies_tab, file=file.path(out_dir, 'n_studies_cumfreq.txt'), quote=FALSE, sep='\t', na='', row.names=FALSE)
+
+n_studies_cumulative_freq_ggp <-
+  ggplot(n_studies_tab) +
+  geom_line(aes(x=`N studies`, y=`Cumulative frequency`)) +
+  scale_x_reverse() +
+  theme_bw()
+ggsave(file.path(out_dir, 'n_studies_cumulative_frequency.png'), plot=n_studies_cumulative_freq_ggp, width=plot_width, height=plot_height, dpi=plot_dpi, scale=0.6)
 
 # This version is more explicit about what's going on in the review process, at the expense of being overcomplicated
 # tag_summary_by_review_status <-
