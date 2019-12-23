@@ -11,16 +11,27 @@ library(RColorBrewer)
 library(readr)
 library(stringr)
 library(tidyr)
+options(width=400)
 
-## ----input-files---------------------------------------------------------
-tagged_variables_file <- '/projects/topmed/phenotype_tagging/internal_use_exported_data/2019-12-18_1505_dcc_tagging_data/tagged_variables.txt'
-total_variable_counts_file <- 'total_traits.txt'
-umls_mappings_file <- '2019-04-16_tags_mapped_to_UMLS.tsv'
-
-## ----output-files--------------------------------------------------------
+## ----files---------------------------------------------------------------
 out_dir <- 'paper_figures_and_tables'
+cleaned_data <- file.path(out_dir, 'tagged_variables_cleaned.txt')
+study_data <- file.path(out_dir, 'tagged_study_versions_cleaned.txt')
 
-## ----read-tagging-data, results='hide'-----------------------------------
+## ----read-data, results='hide'-----------------------------------
+study_version_col_types <- cols(
+  Study = col_factor(NULL),
+  `Versioned study accession` = col_character(),
+  `N dbGaP variables` = col_double(),
+  study_shortname = col_factor(NULL),
+  funded = col_logical()
+)
+study_version_counts <- read_tsv(study_data, na=c('', 'None'), col_types=study_version_col_types)
+cat('Problems found:', sep='\n')
+problems(study_version_counts)  # No problems!
+str(study_version_counts)
+funded_studies <- study_version_counts$study_shortname[study_version_counts$funded]
+
 tagged_variable_col_types <- cols(
   tag_id = col_factor(NULL),
   tag_title = col_factor(NULL),
@@ -41,85 +52,17 @@ tagged_variable_col_types <- cols(
   study_response_status = col_factor(NULL),
   study_response_comment = col_character(),
   study_response_creator = col_character(),
+  dcc_decision_decision = col_factor(NULL),
+  dcc_decision_comment = col_character(),
+  dcc_decision_creator = col_factor(NULL),
   is_archived = col_logical(),
-  milestone = col_factor(NULL)
+  milestone = col_factor(NULL),
+  study_shortname = col_factor(NULL)
 )
-tagged_variables <- read_tsv(tagged_variables_file, na=c('', 'None'), col_types=tagged_variable_col_types)
+tagged_variables <- read_tsv(cleaned_data, na=c('', 'None'), col_types=tagged_variable_col_types)
+cat('Problems found:', sep='\n')
 problems(tagged_variables)  # No problems!
-
-## ----add-shortname-------------------------------------------------------
-funded_studies <- c('MESA' = 209, 'JHS' = 286, 'ARIC' = 280, 'CHS' = 287, 'WHI' = 200, 'FHS' = 7, 'CARDIA' = 285)
-# I was previously using funded_studies to subset the data to only show funded studies, but now I'm not really using it.
-
-study_shortnames <- c('MESA' = 209, 'JHS' = 286, 'ARIC' = 280, 'CHS' = 287, 'WHI' = 200, 'FHS' = 7, 'CARDIA' = 285,
-                      'COPDGene' = 179, 'CFS' = 284, 'Mayo_VTE' = 289, 'GOLDN' = 741, 'HCHS/SOL' = 810,
-                      'SAS' = 914, 'Amish' = 956, 'CRA' = 988, 'HVH' = 1013, 'GENOA' = 1238)
-study_shortnames <- study_shortnames[order(names(study_shortnames))]
-
-# Add a study_shortname column.
-phs_to_shortname <- names(study_shortnames)
-names(phs_to_shortname) <- as.character(study_shortnames)
-phs_to_shortname <- as.list(phs_to_shortname)
-tagged_variables <- tagged_variables %>% 
-    mutate(study_shortname=recode_factor(study_phs, !!!phs_to_shortname))
-
-## ----total-variable-data-process, results='hide'-------------------------
-total_variables_col_types <- cols(
-  study_name = col_factor(NULL),
-  n_variables = col_number(),
-  phs = col_character()
-)
-total_variables <- read_tsv(total_variable_counts_file, col_types=total_variables_col_types)
-# Convert the phs string to a number, and to a factor type.
-total_variables <- total_variables %>%
-    mutate(phs = as.numeric(str_replace(phs, 'phs', ''))) %>% 
-    rename(study_phs = phs) %>% 
-    mutate(study_phs=factor(study_phs))
-
-## ----umls-sheet-data-process, results='hide'-----------------------------
-umls_sheet_col_types <- cols(
-  `Phenotype domain` = col_character(),
-  `Tag name (phenotype concept)` = col_factor(NULL),
-  Description = col_character(),
-  Instructions = col_character(),
-  `UMLS CUI` = col_character(),
-  `UMLS term` = col_character()
-)
-umls_sheet <- read_tsv(umls_mappings_file, comment='#', col_types=umls_sheet_col_types)
-colnames(umls_sheet) <- c('phenotype_area', 'tag_title', 'description', 'instructions', 'cui', 'umls_term')
-# Set medication to be its own phenotype area.
-umls_sheet$phenotype_area[umls_sheet$tag_title == 'Medication/supplement use'] <- 'Medication/supplement use'
-umls_sheet <- umls_sheet %>% mutate(phenotype_area = factor(phenotype_area))
-
-## ----set-factor-levels, fig.show='hide', results='hold'------------------
-# Order the milestone levels properly.
-tagged_variables <- tagged_variables %>% 
-    mutate(milestone=fct_relevel(milestone, c('1', '2', '3', '4')))
-
-# Add sensible labels for the DCC status levels.
-tagged_variables <- tagged_variables %>%
-    mutate(dcc_review_status=recode_factor(dcc_review_status, !!!list('1'='confirmed', '0'='needs study followup')))
-
-# Add sensible labels for the study response status levels.
-tagged_variables <- tagged_variables %>%
-    mutate(study_response_status=recode_factor(study_response_status, !!!list('1'='agreed to remove', '0'='gave explanation')))
-
-# Add sensible labels for the dcc decision status levels.
-tagged_variables <- tagged_variables %>%
-  mutate(dcc_decision_decision=recode_factor(dcc_decision_decision, !!!list('1'='confirmed', '0'='removed')))
-
-# Reorder factor levels for tag_title
-tagged_variables <- tagged_variables %>%
-  mutate(tag_title = fct_relevel(tag_title, sort))
-
-# Save the final data to put in the paper repository
-write.table(tagged_variables, file=file.path(out_dir, 'tagged_variables_cleaned.txt'), quote=FALSE, sep='\t', na='', row.names=FALSE)
-
-## ----print-cleaned-tagging-data, results='hold'--------------------------
-options(width=400)
-print(tagged_variables, n_extra=30)
-print(total_variables)
-print(umls_sheet)
+str(tagged_variables)
 
 ## ----visual-settings-----------------------------------------------------
 # Standard plot size
@@ -151,8 +94,8 @@ milestone_facets <- facet_wrap(~ milestone, scales='free', ncol=1, labeller=labe
 ## ----number-of-variables-------------------------------------------------
 (n_unique_variables <- length(unique(tagged_variables$variable_phv)))
 (n_tagged_variables <- nrow(tagged_variables))
-(n_funded <- nrow(tagged_variables %>% filter(study_shortname %in% names(funded_studies))))
-(n_nonfunded <- nrow(tagged_variables %>% filter(!(study_shortname %in% names(funded_studies)))))
+(n_funded <- nrow(tagged_variables %>% filter(study_shortname %in% funded_studies)))
+(n_nonfunded <- nrow(tagged_variables %>% filter(!(study_shortname %in% funded_studies))))
 n_funded / n_nonfunded
 (n_tagged_variables_passed <- sum(!tagged_variables$is_archived))
 (n_tagged_variables_failed <- sum(tagged_variables$is_archived))
@@ -164,8 +107,8 @@ tagged_variable_counts_by_study <-
   summarize(tagged_variable_count=n())
 
 total_variables_and_tagged_counts <- 
-    inner_join(total_variables, tagged_variable_counts_by_study) %>% 
-    mutate(proportion_tagged=tagged_variable_count/n_variables) %>% 
+    inner_join(study_version_counts, tagged_variable_counts_by_study) %>% 
+    mutate(proportion_tagged=tagged_variable_count/`N dbGaP variables`) %>% 
     mutate(proportion_tagged_formatted = as.character(round(proportion_tagged, 2)))
 total_variables_and_tagged_counts$proportion_tagged_formatted[3] <- 
     paste(total_variables_and_tagged_counts$proportion_tagged_formatted[3], 
@@ -173,7 +116,7 @@ total_variables_and_tagged_counts$proportion_tagged_formatted[3] <-
 
 total_variables_and_tagged_counts_ggp <- 
     ggplot(total_variables_and_tagged_counts) +
-    geom_col(aes(x=study_shortname, y=proportion_tagged, fill=n_variables), color=bar_border_color) +
+    geom_col(aes(x=study_shortname, y=proportion_tagged, fill=`N dbGaP variables`), color=bar_border_color) +
     scale_fill_distiller(palette="Blues", direction=1, trans='log10', name='Number of dbGaP variables') +
     current_theme +
     ylab('Proportion of dbGaP study variables tagged') +
@@ -247,34 +190,30 @@ ggsave(file.path(out_dir, 'confirmed_tagged_variables_by_tag.png'), plot=review_
 
 
 ## ----collapse-confirmed-or-not-by-tag-domain-------------------------------------
-tagged_variables_with_domains <- 
-    right_join(tagged_variables, umls_sheet, by='tag_title')
-str(tagged_variables_with_domains)
-
 review_status_by_domain <-
-    tagged_variables_with_domains %>% 
-    group_by(phenotype_area, is_archived) %>% 
+    tagged_variables %>% 
+    group_by(phenotype_domain, is_archived) %>% 
     summarize(tagged_variable_count=n()) %>% 
     mutate(review_status = ifelse(is_archived, 'Failed review', 'Passed review'))
 
 # Get the count from the domain with the highest number of tagged variables, after Medication use is removed.
 domain_highest_non_med_count <-
   review_status_by_domain %>%
-  filter(phenotype_area != "Medication/supplement use") %>%
+  filter(phenotype_domain != "Medication/supplement use") %>%
   summarize(tagged_variable_count=sum(tagged_variable_count)) %>% 
   ungroup() %>%
   filter(tagged_variable_count == max(tagged_variable_count)) %>%
   pull(tagged_variable_count)
 
 med_use_count <- review_status_by_domain %>%
-  filter(phenotype_area == "Medication/supplement use") %>%
+  filter(phenotype_domain == "Medication/supplement use") %>%
   summarize(tagged_variable_count=sum(tagged_variable_count)) %>% 
   ungroup() %>%
   pull(tagged_variable_count)
 
 review_status_by_domain_ggp <-
     ggplot(review_status_by_domain) +
-    geom_bar(aes(x=phenotype_area, y=tagged_variable_count, fill=review_status), stat='identity', position=position_stack(reverse=TRUE), color=bar_border_color) +
+    geom_bar(aes(x=phenotype_domain, y=tagged_variable_count, fill=review_status), stat='identity', position=position_stack(reverse=TRUE), color=bar_border_color) +
     scale_fill_brewer(palette='Paired', direction=-1) +
     scale_x_discrete(labels = function(x) str_wrap(x, width = 20)) +
     # facet_wrap(~ in_first_half, scales='free', nrow=2) +
@@ -358,7 +297,7 @@ ggsave(file.path(out_dir, 'n_studies_cumulative_frequency.png'), plot=n_studies_
 # This is the simplified version, in terms of number removed every round of review
 tag_summary_by_review_status_funded <-
   tagged_variables %>%
-  filter(study_shortname %in% names(funded_studies)) %>%
+  filter(study_shortname %in% funded_studies) %>%
   group_by(tag_title, .drop=FALSE) %>%
   summarize(
     `Total tagged`=n(),
@@ -375,7 +314,7 @@ write.table(tag_summary_by_review_status_funded, file=file.path(out_dir, 'tag_su
 
 tag_summary_by_review_status_nonfunded <-
   tagged_variables %>%
-  filter( !(study_shortname %in% names(funded_studies)) ) %>%
+  filter( !(study_shortname %in% funded_studies) ) %>%
   group_by(tag_title, .drop=FALSE) %>%
   summarize(
     `Total tagged`=n(),
