@@ -310,20 +310,20 @@ tag_summary_by_study <-
 write.table(tag_summary_by_study, file=file.path(out_dir, 'tag_summary_by_study.txt'), quote=FALSE, sep='\t', na='', row.names=FALSE)
 
 # This version is more explicit about what's going on in the review process, at the expense of being overcomplicated
-tag_summary_by_review_status <-
-  tagged_variables %>%
-  group_by(tag_title, .drop=FALSE) %>%
-  summarize(
-    total=n(),
-    confirmed_at_1=sum(dcc_review_status=='1', na.rm=TRUE),  # status is confirmed
-    flagged_at_1=sum(dcc_review_status=='0', na.rm=TRUE),  # status is flagged for study review
-    removed_at_2=sum(dcc_review_status=='0' & study_response_status=='1', na.rm=TRUE),  # study response agreed to remove
-    explanation_at_2=sum(dcc_review_status=='0' & study_response_status=='0', na.rm=TRUE),  # study response gave explanation
-    confirmed_at_3=sum(!is.na(dcc_decision_decision) & dcc_decision_decision=='1', na.rm=TRUE),  # dcc decision is to confirm
-    removed_at_3=sum(!is.na(dcc_decision_decision) & dcc_decision_decision=='0', na.rm=TRUE),  # dcc decision is to remove
-    total_passed=sum(!is_archived, na.rm=TRUE),  # 
-    total_failed=sum(is_archived, na.rm=TRUE)  #
-      )
+# tag_summary_by_review_status <-
+#   tagged_variables %>%
+#   group_by(tag_title, .drop=FALSE) %>%
+#   summarize(
+#     total=n(),
+#     confirmed_at_1=sum(dcc_review_status=='1', na.rm=TRUE),  # status is confirmed
+#     flagged_at_1=sum(dcc_review_status=='0', na.rm=TRUE),  # status is flagged for study review
+#     removed_at_2=sum(dcc_review_status=='0' & study_response_status=='1', na.rm=TRUE),  # study response agreed to remove
+#     explanation_at_2=sum(dcc_review_status=='0' & study_response_status=='0', na.rm=TRUE),  # study response gave explanation
+#     confirmed_at_3=sum(!is.na(dcc_decision_decision) & dcc_decision_decision=='1', na.rm=TRUE),  # dcc decision is to confirm
+#     removed_at_3=sum(!is.na(dcc_decision_decision) & dcc_decision_decision=='0', na.rm=TRUE),  # dcc decision is to remove
+#     total_passed=sum(!is_archived, na.rm=TRUE),  # 
+#     total_failed=sum(is_archived, na.rm=TRUE)  #
+#       )
 
 # This is the simplified version, in terms of number removed every round of review
 tag_summary_by_review_status_funded <-
