@@ -149,10 +149,13 @@ names(longer_milestone_labels) <- levels(tagged_variables$milestone)
 milestone_facets <- facet_wrap(~ milestone, scales='free', ncol=1, labeller=labeller(milestone=longer_milestone_labels))
 
 ## ----number-of-variables-------------------------------------------------
-n_unique_variables <- length(unique(tagged_variables$variable_phv))
-n_tagged_variables <- nrow(tagged_variables)
-n_tagged_variables_passed <- sum(!tagged_variables$is_archived)
-n_tagged_variables_failed <- sum(tagged_variables$is_archived)
+(n_unique_variables <- length(unique(tagged_variables$variable_phv)))
+(n_tagged_variables <- nrow(tagged_variables))
+(n_funded <- nrow(tagged_variables %>% filter(study_shortname %in% names(funded_studies))))
+(n_nonfunded <- nrow(tagged_variables %>% filter(!(study_shortname %in% names(funded_studies)))))
+n_funded / n_nonfunded
+(n_tagged_variables_passed <- sum(!tagged_variables$is_archived))
+(n_tagged_variables_failed <- sum(tagged_variables$is_archived))
 
 ## ----proportion-total-vars-tagged----------------------------------------
 tagged_variable_counts_by_study <- 
@@ -338,7 +341,7 @@ tag_summary_by_review_status_funded <-
   arrange(tag_title) %>%
   rename(`Phenotype tag`=tag_title) %>%
   adorn_totals("row")
-write.table(tag_summary_by_review_status, file=file.path(out_dir, 'tag_summary_by_review_status_funded.txt'), quote=FALSE, sep='\t', na='', row.names=FALSE)
+write.table(tag_summary_by_review_status_funded, file=file.path(out_dir, 'tag_summary_by_review_status_funded.txt'), quote=FALSE, sep='\t', na='', row.names=FALSE)
 
 tag_summary_by_review_status_nonfunded <-
   tagged_variables %>%
@@ -352,5 +355,5 @@ tag_summary_by_review_status_nonfunded <-
   arrange(tag_title) %>%
   rename(`Phenotype tag`=tag_title) %>%
   adorn_totals("row")
-write.table(tag_summary_by_review_status, file=file.path(out_dir, 'tag_summary_by_review_status_nonfunded.txt'), quote=FALSE, sep='\t', na='', row.names=FALSE)
+write.table(tag_summary_by_review_status_nonfunded, file=file.path(out_dir, 'tag_summary_by_review_status_nonfunded.txt'), quote=FALSE, sep='\t', na='', row.names=FALSE)
 
