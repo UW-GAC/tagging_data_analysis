@@ -234,10 +234,6 @@ review_status_by_domain_ggp <-
 ggsave(file.path(out_dir, 'confirmed_tagged_variables_by_domain.png'), plot=review_status_by_domain_ggp, width=plot_width, height=plot_height, dpi=plot_dpi, scale=0.6)
 
 ## ----reviewed-status-by-study-and-tag-table---------------------------------
-# Trying to make the table shown in scratchpad with date 2019-12-06
-
-str(tagged_variables)
-
 tag_summary_by_study <-
   tagged_variables %>%
   subset(is_archived==FALSE) %>%
@@ -269,7 +265,7 @@ n_studies_tab <-
   arrange(-`N studies`) %>%
   mutate(`Cumulative frequency`=cumsum(Frequency))
 
-write.table(n_studies_tab, file=file.path(out_dir, 'n_studies_cumfreq.txt'), quote=FALSE, sep='\t', na='', row.names=FALSE)
+write.table(n_studies_tab, file=file.path(out_dir, 'n_studies_cumulative_frequency.txt'), quote=FALSE, sep='\t', na='', row.names=FALSE)
 
 n_studies_cumulative_freq_ggp <-
   ggplot(n_studies_tab) +

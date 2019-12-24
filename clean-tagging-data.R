@@ -128,5 +128,5 @@ total_variables <- total_variables %>%
 write.table(total_variables, file=file.path(out_dir, 'tagged_study_versions_cleaned.txt'), quote=FALSE, sep='\t', na='', row.names=FALSE)
 
 # Run these in the terminal pane
-# cp paper_figures_and_tables/tagged_variables_cleaned.txt ~/devel/phenotype-harmonization-paper/data
-# cp paper_figures_and_tables/tagged_study_versions_cleaned.txt ~/devel/phenotype-harmonization-paper/data
+# cp paper_figures_and_tables/tagged_variables_cleaned.txt /home/staff/emeryl/devel/phenotype-harmonization-paper/data
+# cp paper_figures_and_tables/tagged_study_versions_cleaned.txt /home/staff/emeryl/devel/phenotype-harmonization-paper/data
